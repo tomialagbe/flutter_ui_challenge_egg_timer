@@ -1,5 +1,5 @@
-name: kitchen_timer
-description: UI challenge to create a kitchen timer.
+name: egg_timer
+description: UI challenge to create a egg timer.
 
 dependencies:
   flutter:

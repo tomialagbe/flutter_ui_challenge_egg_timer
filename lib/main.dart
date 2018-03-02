@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kitchen_timer/egg_timer.dart';
+import 'package:egg_timer/egg_timer.dart';
 
 void main() {
   runApp(new MyApp());

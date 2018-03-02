@@ -1,8 +1,8 @@
-import 'dart:async';
 import 'dart:math';
 
-import 'package:intl/intl.dart' hide TextDirection;
+import 'package:egg_timer/countdown_timer.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:meta/meta.dart';
 import 'package:vector_math/vector_math_64.dart' as vectormath;
 
@@ -12,7 +12,7 @@ class EggTimer extends StatefulWidget {
   final int ticksPerMinute;
 
   EggTimer({
-    this.maxTimerAmount = const Duration(minutes: 15),
+    this.maxTimerAmount = const Duration(minutes: 60),
     this.ticksPerMinute = 1,
   });
 
@@ -22,8 +22,9 @@ class EggTimer extends StatefulWidget {
 
 class _EggTimerState extends State<EggTimer> with TickerProviderStateMixin {
 
-  EggTimerState state = EggTimerState.READY;
-  Duration timeToAlarm;
+  static const double RESET_SPEED_PERCENT_PER_SECOND = 3.0;
+
+  CountdownTimer countdownTimer;
 
   //------- TIME DISPLAY --------
   final DateFormat draggingMinutesFormat = new DateFormat('mm');
@@ -34,19 +35,17 @@ class _EggTimerState extends State<EggTimer> with TickerProviderStateMixin {
 
   AnimationController textTransitionAnimationController;
 
-  //-------- DIAL AND COUTNDOWN -------
-  Stopwatch stopwatch;
-  bool running = false;
+  //-------- DIAL AND COUNTDOWN -------
   double dialPositionAsPercent;
-  Offset startDragPosition;
+  bool isDragging;
   AnimationController resetDialAnimationController;
+  Animation<double> resetDialAnimation;
 
   //-------- RESET AND RESTART BUTTON -----
   AnimationController resetAndRestartVisibleAnimationController;
 
   //-------- RESUME AND PAUSE BUTTON ------
   AnimationController slideInResumeAndPauseButtonAnimationController;
-
 
   _EggTimerState({
     this.dialPositionAsPercent = 0.0,
@@ -75,7 +74,11 @@ class _EggTimerState extends State<EggTimer> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    stopwatch = new Stopwatch();
+
+    countdownTimer = new CountdownTimer(
+      onTimerUpdate: _onTimerUpdate,
+      maxTimeInSeconds: widget.maxTimerAmount.inSeconds,
+    );
   }
 
   @override
@@ -86,140 +89,105 @@ class _EggTimerState extends State<EggTimer> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  _start() {
+  _onTimerUpdate() {
     setState(() {
-      state = EggTimerState.RUNNING;
+      print('Tick Render Update. Time: ${countdownTimer.time}');
 
-      running = true;
-      stopwatch.start();
-      _updateCountdownTime();
-      _scheduleTick();
+      final newDialPercent = countdownTimer.time / widget.maxTimerAmount.inSeconds;
+      if (!isDragging) {
+        resetDialAnimationController.duration = new Duration(
+            milliseconds: (dialPositionAsPercent / RESET_SPEED_PERCENT_PER_SECOND * 1000).round()
+        );
+        resetDialAnimationController.value = 0.0;
+        resetDialAnimation = new Tween(begin: dialPositionAsPercent, end: newDialPercent)
+          .animate(resetDialAnimationController)
+          ..addListener(() {
 
-      _transitionToCountdown();
-      _slideInResumeAndPauseButton();
-    });
-  }
-
-  _toggle() {
-    setState(() {
-      if (running) {
-        state = EggTimerState.PAUSED;
-        running = false;
-        stopwatch.stop();
-        _showResetAndRestartButtons();
+          });
+        resetDialAnimationController.forward();
       } else {
-        state = EggTimerState.RUNNING;
-        running = true;
-        stopwatch.start();
-        _scheduleTick();
-        _hideResetAndRestartButtons();
+        if (null != resetDialAnimation) {
+          resetDialAnimationController.stop();
+          resetDialAnimation = null;
+        }
+      }
+      dialPositionAsPercent = newDialPercent;
+
+      // TODO: move "alarm" to an event instead of simply checking for zero
+      if (countdownTimer.time == 0) {
+        // The alarm is done.
+        _updateDraggingMinute();
+        _transitionToTimeSelection();
+      }
+
+      switch (countdownTimer.state) {
+        case CountdownTimerState.ready:
+          _updateDraggingMinute();
+
+          _hideResetAndRestartButtons();
+          _slideOutResumeAndPauseButton();
+          break;
+        case CountdownTimerState.running:
+          _updateCountdownTime();
+
+          _hideResetAndRestartButtons();
+          break;
+        case CountdownTimerState.paused:
+          _updateCountdownTime();
+
+          _showResetAndRestartButtons();
+          break;
       }
     });
   }
 
-  _reset() {
+  _onDialTurnStart(double newDialPositionAsPercent) {
+    if (countdownTimer.state != CountdownTimerState.ready) {
+      return;
+    }
+
     setState(() {
-      state = EggTimerState.READY;
-      running = false;
-      stopwatch.reset();
-      stopwatch.stop();
-      resetDialAnimationController.value = dialPositionAsPercent;
-      resetDialAnimationController.reverse();
-      dialPositionAsPercent = 0.0;
-      _updateDraggingMinute();
-      _transitionToTimeSelection();
-      _hideResetAndRestartButtons();
-      _slideOutResumeAndPauseButton();
+      isDragging = true;
+      dialPositionAsPercent = newDialPositionAsPercent;
     });
   }
 
-  _restart() {
+  _onDialTurnUpdate(double newDialPositionAsPercent) {
+    if (countdownTimer.state != CountdownTimerState.ready) {
+      return;
+    }
+
     setState(() {
-      state = EggTimerState.RUNNING;
-      running = true;
-      stopwatch.reset();
-      stopwatch.start();
-      dialPositionAsPercent = timeToAlarm.inSeconds / widget.maxTimerAmount.inSeconds;
-      _updateCountdownTime();
-      _hideResetAndRestartButtons();
-      _scheduleTick();
+      print('Updating turn to percent: $newDialPositionAsPercent');
+      dialPositionAsPercent = newDialPositionAsPercent;
+
+      // Round to the nearest minute before setting the countdown timer.
+      double selectedTimeRoundedToMinutes = (countdownTimer.maxTimeInSeconds * dialPositionAsPercent / 60.0);//.round();
+
+      countdownTimer.time = (selectedTimeRoundedToMinutes * 60).round();
     });
   }
 
-  _scheduleTick() {
-    new Timer(new Duration(seconds: 1), _onTick);
-  }
+  _onDialTurnEnd() {
+    if (countdownTimer.state != CountdownTimerState.ready) {
+      return;
+    }
 
-  _onTick() {
-    if (running) {
+    setState(() {
+      isDragging = false;
+
+      // Round the time to the nearest minute (this is a design feature of the clock).
+      countdownTimer.time = (countdownTimer.time / 60).round() * 60;
+
+      // Start the clock.
+      countdownTimer.resume();
+
+      // TODO: get rid of what's below
       setState(() {
-        dialPositionAsPercent =
-            (timeToAlarm.inSeconds - stopwatch.elapsed.inSeconds) /
-                widget.maxTimerAmount.inSeconds;
-
-        if (stopwatch.elapsed.inSeconds >= timeToAlarm.inSeconds) {
-          // The alarm is done.
-          _doAlarm();
-        }
+        _updateCountdownTime();
+        _transitionToCountdown();
+        _slideInResumeAndPauseButton();
       });
-
-      _updateCountdownTime();
-
-      _scheduleTick();
-    }
-  }
-
-  _doAlarm() {
-    setState(() {
-      state = EggTimerState.READY;
-      running = false;
-      timeToAlarm = null;
-      stopwatch.stop();
-      stopwatch.reset();
-      resetDialAnimationController.value = 0.0;
-      slideInResumeAndPauseButtonAnimationController.value = 0.0;
-      _updateDraggingMinute();
-      _transitionToTimeSelection();
-    });
-  }
-
-  _onDragStart(DragStartDetails details) {
-    if (state != EggTimerState.READY) {
-      return;
-    }
-
-    startDragPosition = details.globalPosition;
-    _updateDraggingMinute();
-  }
-
-  _onDrag(DragUpdateDetails details) {
-    if (state != EggTimerState.READY) {
-      return;
-    }
-
-    print('Drag startY: ${startDragPosition.dy}, currY: ${details.globalPosition.dy}');
-    double deltaPercent = details.delta.dy / 250.0;
-    double newDialPercent = dialPositionAsPercent + deltaPercent;
-
-    setState(() {
-      dialPositionAsPercent = newDialPercent;
-      dialPositionAsPercent = dialPositionAsPercent.clamp(0.0, 1.0);
-      resetDialAnimationController.value = dialPositionAsPercent;
-    });
-
-    _updateDraggingMinute();
-  }
-
-  _onDragEnd(DragEndDetails details) {
-    if (state != EggTimerState.READY) {
-      return;
-    }
-
-    setState(() {
-      startDragPosition = null;
-      timeToAlarm = new Duration(minutes: (widget.maxTimerAmount.inSeconds * dialPositionAsPercent / 60.0).round());
-      dialPositionAsPercent = timeToAlarm.inSeconds / widget.maxTimerAmount.inSeconds;
-      _start();
     });
   }
 
@@ -234,7 +202,6 @@ class _EggTimerState extends State<EggTimer> with TickerProviderStateMixin {
   _updateDraggingMinute() {
     setState(() {
       int selectedTimeRoundedToMinutes = new Duration(minutes: (widget.maxTimerAmount.inSeconds * dialPositionAsPercent / 60.0).round()).inMinutes;
-//      draggingMinutes = '$selectedTimeRoundedToMinutes';
       DateTime dateTime = new DateTime(new DateTime.now().year, 0, 0, 0, selectedTimeRoundedToMinutes);
       draggingMinutes = draggingMinutesFormat.format(dateTime);
     });
@@ -242,12 +209,11 @@ class _EggTimerState extends State<EggTimer> with TickerProviderStateMixin {
 
   _updateCountdownTime() {
     setState(() {
-      if (running) {
-        Duration countdown = new Duration(
-            seconds: timeToAlarm.inSeconds - stopwatch.elapsed.inSeconds);
-        DateTime dateTime = new DateTime(new DateTime.now().year, 0, 0, 0, 0, countdown.inSeconds);
-        countdownTime = countdownFormat.format(dateTime);
-      }
+      Duration countdown = new Duration(
+          seconds: countdownTimer.time
+      );
+      DateTime dateTime = new DateTime(new DateTime.now().year, 0, 0, 0, 0, countdown.inSeconds);
+      countdownTime = countdownFormat.format(dateTime);
     });
   }
 
@@ -325,15 +291,15 @@ class _EggTimerState extends State<EggTimer> with TickerProviderStateMixin {
                   ),
                 ),
                 //------------ DIAL --------------
-                new GestureDetector(
-                  onVerticalDragStart: _onDragStart,
-                  onVerticalDragUpdate: _onDrag,
-                  onVerticalDragEnd: _onDragEnd,
+                new DialGestureDetector(
+                  onDialTurnStart: _onDialTurnStart,
+                  onDialTurnUpdate: _onDialTurnUpdate,
+                  onDialTurnEnd: _onDialTurnEnd,
                   child: new EggTimerDial(
-                    totalTicks: widget.maxTimerAmount.inMinutes * widget.ticksPerMinute,
-                    dialPositionAsPercent: EggTimerState.READY != state
-                        ? dialPositionAsPercent
-                        : null == resetDialAnimationController ? 0.0 : resetDialAnimationController.value,
+                    totalTicks: (countdownTimer.maxTimeInSeconds / 60).round() * widget.ticksPerMinute,
+                    dialPositionAsPercent: null != resetDialAnimation
+                        ? resetDialAnimation.value
+                        : dialPositionAsPercent,
                   ),
                 ),
                 new Expanded(
@@ -350,8 +316,8 @@ class _EggTimerState extends State<EggTimer> with TickerProviderStateMixin {
                         icon: Icons.refresh,
                         text: 'RESTART',
                         padding: const EdgeInsets.only(left: 25.0, right: 25.0, top: 25.0, bottom: 25.0),
-                        onPressed: EggTimerState.PAUSED == state
-                            ? _restart
+                        onPressed: CountdownTimerState.paused == countdownTimer.state
+                            ? countdownTimer.restart
                             : null,
                       ),
                       new Expanded(
@@ -361,8 +327,8 @@ class _EggTimerState extends State<EggTimer> with TickerProviderStateMixin {
                         icon: Icons.arrow_back,
                         text: 'RESET',
                         padding: const EdgeInsets.only(left: 25.0, right: 25.0, top: 25.0, bottom: 25.0),
-                        onPressed: EggTimerState.PAUSED == state
-                          ? _reset
+                        onPressed: CountdownTimerState.paused == countdownTimer.state
+                          ? countdownTimer.reset
                           : null,
                       ),
                     ],
@@ -375,10 +341,16 @@ class _EggTimerState extends State<EggTimer> with TickerProviderStateMixin {
                       ? new vectormath.Vector3(0.0, 300.0, 0.0)
                       : new vectormath.Vector3(0.0, 300.0 * (1.0 - slideInResumeAndPauseButtonAnimationController.value), 0.0)),
                   child: new IconWithTextButton(
-                    icon: running ? Icons.pause : Icons.play_arrow,
-                    text: running ? 'PAUSE' : 'RESUME',
+                    icon: CountdownTimerState.running == countdownTimer.state
+                        ? Icons.pause
+                        : Icons.play_arrow,
+                    text: CountdownTimerState.running == countdownTimer.state
+                        ? 'PAUSE'
+                        : 'RESUME',
                     color: Colors.white,
-                    onPressed: _toggle,
+                    onPressed: CountdownTimerState.running == countdownTimer.state
+                        ? countdownTimer.pause
+                        : countdownTimer.resume,
                   ),
                 ),
               ]
@@ -390,11 +362,175 @@ class _EggTimerState extends State<EggTimer> with TickerProviderStateMixin {
   }
 }
 
-enum EggTimerState {
-  READY,
-  RUNNING,
-  PAUSED
+class DialGestureDetector extends StatefulWidget {
+
+  final double initialDialTurnInPercent;
+  final DialTurnStart onDialTurnStart;
+  final DialTurnUpdate onDialTurnUpdate;
+  final DialTurnEnd onDialTurnEnd;
+  final Widget child;
+
+  DialGestureDetector({
+    this.initialDialTurnInPercent,
+    this.onDialTurnStart,
+    this.onDialTurnUpdate,
+    this.onDialTurnEnd,
+    @required this.child,
+  });
+
+  @override
+  _DialGestureDetectorState createState() => new _DialGestureDetectorState();
 }
+
+class _DialGestureDetectorState extends State<DialGestureDetector> {
+
+  double dialPositionAsPercent = 0.0;
+  double turningPositionAsPercent = 0.0;
+  ParametricCoord startTurningCoord;
+
+  _onRadialDragStart(ParametricCoord coord) {
+    startTurningCoord = coord;
+
+    if (null != widget.onDialTurnStart) {
+      widget.onDialTurnStart(0.0);
+    }
+  }
+
+  _onRadialDragUpdate(ParametricCoord coord) {
+    if (null != startTurningCoord) {
+      final angleDelta = coord.angle - startTurningCoord.angle;
+      turningPositionAsPercent = dialPositionAsPercent + (angleDelta / (PI * 2));
+
+      if (null != widget.onDialTurnUpdate) {
+        widget.onDialTurnUpdate(turningPositionAsPercent);
+      }
+    }
+  }
+
+  _onRadialDragEnd() {
+    startTurningCoord = null;
+    turningPositionAsPercent = 0.0;
+    dialPositionAsPercent = turningPositionAsPercent;
+
+    if (null != widget.onDialTurnEnd) {
+      widget.onDialTurnEnd();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return new RadialGestureDetector(
+        onRadialDragStart: _onRadialDragStart,
+        onRadialDragUpdate: _onRadialDragUpdate,
+        onRadialDragEnd: _onRadialDragEnd,
+        child: widget.child,
+    );
+  }
+}
+
+typedef DialTurnStart = Function(double dialPositionAsPercent);
+typedef DialTurnUpdate = Function(double dialPositionAsPercent);
+typedef DialTurnEnd = Function();
+
+class ParametricCoord {
+  final angle;
+  final radius;
+
+  factory ParametricCoord.fromPoint(Point origin, Point point) {
+    Point diffFromOrigin = point - origin;
+    Offset vector = new Offset(diffFromOrigin.x, diffFromOrigin.y);
+
+    return new ParametricCoord(
+      vector.direction,
+      vector.distance,
+    );
+  }
+
+  ParametricCoord(this.angle, this.radius);
+}
+
+class RadialGestureDetector extends StatefulWidget {
+
+  final Offset origin;
+  final RadialDragStart onRadialDragStart;
+  final RadialDragUpdate onRadialDragUpdate;
+  final RadialDragEnd onRadialDragEnd;
+  final Widget child;
+
+  RadialGestureDetector({
+    this.origin,
+    this.onRadialDragStart,
+    this.onRadialDragUpdate,
+    this.onRadialDragEnd,
+    @required this.child
+  });
+
+  @override
+  _RadialGestureDetectorState createState() => new _RadialGestureDetectorState();
+}
+
+class _RadialGestureDetectorState extends State<RadialGestureDetector> {
+
+  _onDragStart(DragStartDetails details) {
+    print('Start drag position: ${details.globalPosition}');
+    if (null != widget.onRadialDragStart) {
+      widget.onRadialDragStart(
+          _parametricCoordFromGlobalPosition(details.globalPosition)
+      );
+    }
+  }
+
+  _onDrag(DragUpdateDetails details) {
+    if (null != widget.onRadialDragUpdate) {
+      widget.onRadialDragUpdate(
+          _parametricCoordFromGlobalPosition(details.globalPosition)
+      );
+    }
+  }
+
+  _onDragEnd(DragEndDetails details) {
+    if (null != widget.onRadialDragEnd) {
+      widget.onRadialDragEnd();
+    }
+  }
+
+  _parametricCoordFromGlobalPosition(globalPosition) {
+    return new ParametricCoord.fromPoint(
+      _origin(),
+      _localPointFromGlobalPosition(globalPosition),
+    );
+  }
+
+  _origin() {
+    return new Point(
+      context.size.width / 2.0,
+      context.size.height / 2.0,
+    );
+  }
+
+  _localPointFromGlobalPosition(globalPosition) {
+    Offset localOffset = (context.findRenderObject() as RenderBox)
+        .globalToLocal(globalPosition);
+    return new Point(
+      localOffset.dx,
+      localOffset.dy,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return new GestureDetector(
+      onVerticalDragStart: _onDragStart,
+      onVerticalDragUpdate: _onDrag,
+      onVerticalDragEnd: _onDragEnd,
+      child: widget.child,
+    );
+  }
+}
+
+typedef RadialDragStart = Function(ParametricCoord newCoord);
+typedef RadialDragUpdate = Function(ParametricCoord newCoord);
+typedef RadialDragEnd = Function();
 
 class EggTimerDial extends StatelessWidget {
 
@@ -521,7 +657,6 @@ class TicksAndRotatingDial extends StatelessWidget {
   }
 }
 
-
 class DialPainter extends CustomPainter {
 
   final tickCount;
@@ -545,7 +680,7 @@ class DialPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    print('Size: $size');
+//    print('Size: $size');
 
     canvas.translate(size.width / 2, size.height / 2);
 
