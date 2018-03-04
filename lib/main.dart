@@ -27,15 +27,12 @@ class MyApp extends StatelessWidget {
               ),
 
               //--------- Dial --------
-              new RandomColorBlock(
-                width: double.INFINITY,
-                child: new Padding(
-                  padding: const EdgeInsets.only(left: 45.0, right: 45.0),
-                  child: new AspectRatio(
-                    aspectRatio: 1.0,
-                    child: new RandomColorBlock(
-                      width: double.INFINITY,
-                    ),
+              new Padding(
+                padding: const EdgeInsets.only(left: 45.0, right: 45.0),
+                child: new AspectRatio(
+                  aspectRatio: 1.0,
+                  child: new RandomColorBlock(
+                    width: double.INFINITY,
                   ),
                 ),
               ),
