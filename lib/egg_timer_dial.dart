@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:egg_timer/radial_drag_gesture_detector.dart';
 import 'package:egg_timer/ui_constants.dart';
 import 'package:flutter/material.dart';
 
@@ -11,42 +12,53 @@ class EggTimerDial extends StatelessWidget {
       padding: const EdgeInsets.only(left: 45.0, right: 45.0),
       child: new AspectRatio(
         aspectRatio: 1.0,
-        child: new Container(
-          decoration: new BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: new LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [GRADIENT_TOP, GRADIENT_BOTTOM],
-            ),
-            boxShadow: [
-              const BoxShadow(
-                color: const Color(0x44000000),
-                blurRadius: 2.0,
-                spreadRadius: 1.0,
-                offset: const Offset(0.0, 1.0),
+        child: new RadialDragGestureDetector(
+          onRadialDragStart: (coord) {
+            print('Start drag coord: ${coord}');
+          },
+          onRadialDragUpdate: (coord) {
+
+          },
+          onRadialDragEnd: () {
+
+          },
+          child: new Container(
+            decoration: new BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: new LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [GRADIENT_TOP, GRADIENT_BOTTOM],
               ),
-            ],
-          ),
-          child: new Stack(
-            children: [
-              new Padding(
-                padding: const EdgeInsets.all(55.0),
-                child: new Container(
-                  width: double.INFINITY,
-                  height: double.INFINITY,
-                  child: new CustomPaint(
-                    painter: new TimeTickPainter(),
+              boxShadow: [
+                const BoxShadow(
+                  color: const Color(0x44000000),
+                  blurRadius: 2.0,
+                  spreadRadius: 1.0,
+                  offset: const Offset(0.0, 1.0),
+                ),
+              ],
+            ),
+            child: new Stack(
+              children: [
+                new Padding(
+                  padding: const EdgeInsets.all(55.0),
+                  child: new Container(
+                    width: double.INFINITY,
+                    height: double.INFINITY,
+                    child: new CustomPaint(
+                      painter: new TimeTickPainter(),
+                    ),
                   ),
                 ),
-              ),
-              new Padding(
-                padding: const EdgeInsets.all(50.0),
-                child: new Knob(
-                  knobTurnPercent: 0.0,
+                new Padding(
+                  padding: const EdgeInsets.all(50.0),
+                  child: new Knob(
+                    knobTurnPercent: 0.0,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
