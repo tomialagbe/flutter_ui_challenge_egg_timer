@@ -1,4 +1,5 @@
 import 'package:egg_timer/egg_timer_button.dart';
+import 'package:egg_timer/egg_timer_controls.dart';
 import 'package:egg_timer/egg_timer_time_display.dart';
 import 'package:egg_timer/framing.dart';
 import 'package:flutter/material.dart';
@@ -43,30 +44,8 @@ class MyApp extends StatelessWidget {
               new Expanded(child: new Container()),
 
               //------- Controls -----
-              new Column(
-                children: [
-                  new Row(
-                    children: [
-                      new EggTimerButton(
-                        icon: Icons.refresh,
-                        text: 'RESTART',
-                        onPressed: () { },
-                      ),
-                      new Expanded(child: new Container()),
-                      new EggTimerButton(
-                        icon: Icons.arrow_back,
-                        text: 'RESET',
-                        onPressed: () { },
-                      ),
-                    ],
-                  ),
-                  new EggTimerButton(
-                    icon: Icons.pause,
-                    text: 'PAUSE',
-                    backgroundColor: Colors.white,
-                    onPressed: () { },
-                  ),
-                ],
+              new EggTimerControls(
+
               ),
             ],
           ),
