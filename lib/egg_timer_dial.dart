@@ -12,6 +12,7 @@ class EggTimerDial extends StatefulWidget {
 class _EggTimerDialState extends State<EggTimerDial> {
 
   double knobPositionAsPercent = 0.0;
+  double knobPositionTurningPercent = 0.0;
 
   @override
   Widget build(BuildContext context) {
@@ -25,10 +26,14 @@ class _EggTimerDialState extends State<EggTimerDial> {
           },
           onKnobTurnUpdate: (knobTurnPercent) {
             print('Turned $knobTurnPercent');
-            setState(() => knobPositionAsPercent = knobTurnPercent);
+            setState(() => knobPositionTurningPercent = knobTurnPercent);
           },
           onKnobTurnEnd: () {
             print('Turning stopped.');
+            setState(() {
+              knobPositionAsPercent = knobPositionAsPercent + knobPositionTurningPercent;
+              knobPositionTurningPercent = 0.0;
+            });
           },
           child: new Container(
             decoration: new BoxDecoration(
@@ -62,7 +67,7 @@ class _EggTimerDialState extends State<EggTimerDial> {
                 new Padding(
                   padding: const EdgeInsets.all(50.0),
                   child: new Knob(
-                    knobTurnPercent: knobPositionAsPercent,
+                    knobTurnPercent: knobPositionAsPercent + knobPositionTurningPercent,
                   ),
                 ),
               ],
