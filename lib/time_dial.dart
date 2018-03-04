@@ -26,7 +26,7 @@ class DraggableTimeDial extends StatelessWidget {
       onDialTurnStart: onDialTurnStart,
       onDialTurnUpdate: onDialTurnUpdate,
       onDialTurnEnd: onDialTurnEnd,
-      child: new EggTimerDial(
+      child: new TimerDial(
         totalTicks: tickCount,
         dialPositionAsPercent: dialPositionAsPercent,
       ),
@@ -105,12 +105,12 @@ typedef DialTurnStart = Function(double dialPositionAsPercent);
 typedef DialTurnUpdate = Function(double dialPositionAsPercent);
 typedef DialTurnEnd = Function();
 
-class EggTimerDial extends StatelessWidget {
+class TimerDial extends StatelessWidget {
 
   final int totalTicks;
   final double dialPositionAsPercent;
 
-  EggTimerDial({
+  TimerDial({
     @required this.totalTicks,
     @required this.dialPositionAsPercent,
   });

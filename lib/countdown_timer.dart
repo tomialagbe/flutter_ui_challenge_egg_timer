@@ -41,8 +41,20 @@ class CountdownTimer {
     onTimerUpdate();
   }
 
+  get currentCountdownStartTime {
+    return _startCountdownInSeconds;
+  }
+
   resume() {
-    if (state == CountdownTimerState.ready || state == CountdownTimerState.paused) {
+    // Round to the nearest minute before starting the countdown. This is a
+    // desired feature of the timer, to start at whole minutes.
+    final timeRoundedToMinute = (time / 60.0).round() * 60;
+    _timeInSeconds = timeRoundedToMinute;
+    _startCountdownInSeconds = _timeInSeconds;
+
+    if ((state == CountdownTimerState.ready || state == CountdownTimerState.paused)
+        && time > 0) {
+      print('Starting countdown timer with time: $time');
       state = CountdownTimerState.running;
       _stopwatch.start();
       _tick();

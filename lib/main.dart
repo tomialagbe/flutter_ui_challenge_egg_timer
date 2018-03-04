@@ -12,9 +12,11 @@ class MyApp extends StatelessWidget {
     return new MaterialApp(
       title: 'Egg Timer',
       theme: new ThemeData(
-        primarySwatch: Colors.blue,
+        fontFamily: 'BebasNeue',
       ),
-      home: new EggTimer(),
+      home: new Scaffold(
+        body: new EggTimer(),
+      ),
     );
   }
 }
