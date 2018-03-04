@@ -19,16 +19,26 @@ class MyApp extends StatelessWidget {
           child: new Column(
             children: [
               //--------- Time Display --------
-              new RandomColorBlock(
-                width: double.INFINITY,
-                height: 150.0,
+              new Padding(
+                padding: const EdgeInsets.only(top: 15.0),
+                child: new Text(
+                  '17:34',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontFamily: 'BebasNeue',
+                    fontSize: 150.0,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 10.0,
+                  ),
+                ),
               ),
 
               //--------- Dial --------
               new RandomColorBlock(
                 width: double.INFINITY,
                 child: new Padding(
-                  padding: const EdgeInsets.only(left: 35.0, right: 35.0),
+                  padding: const EdgeInsets.only(left: 45.0, right: 45.0),
                   child: new AspectRatio(
                     aspectRatio: 1.0,
                     child: new RandomColorBlock(
