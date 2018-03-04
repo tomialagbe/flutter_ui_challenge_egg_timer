@@ -42,6 +42,14 @@ class MyApp extends StatelessWidget {
                         end: Alignment.bottomCenter,
                         colors: [GRADIENT_TOP, GRADIENT_BOTTOM],
                       ),
+                      boxShadow: [
+                        const BoxShadow(
+                          color: const Color(0x44000000),
+                          blurRadius: 2.0,
+                          spreadRadius: 1.0,
+                          offset: const Offset(0.0, 1.0),
+                        ),
+                      ],
                     ),
                     child: new Padding(
                       padding: const EdgeInsets.all(60.0),
@@ -51,18 +59,40 @@ class MyApp extends StatelessWidget {
                           gradient: new LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [GRADIENT_TOP, Colors.green],
+                            colors: [GRADIENT_TOP, GRADIENT_BOTTOM],
                           ),
+                          boxShadow: [
+                            const BoxShadow(
+                              color: const Color(0x33000000),
+                              blurRadius: 4.0,
+                              spreadRadius: 1.0,
+                              offset: const Offset(0.0, 2.0),
+                            ),
+                            const BoxShadow(
+                              color: const Color(0x22000000),
+                              blurRadius: 6.0,
+                              spreadRadius: 3.0,
+                              offset: const Offset(0.0, 5.0),
+                            ),
+                          ],
                         ),
                         child: new Padding(
                           padding: const EdgeInsets.all(10.0),
                           child: new Container(
                             decoration: new BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: new LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [GRADIENT_TOP, GRADIENT_BOTTOM],
+                              color: Colors.transparent,
+                              border: new Border.all(
+                                color: const Color(0xFFDFDFDF),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: new Center(
+                              child: new Image.network(
+                                'https://avatars3.githubusercontent.com/u/14101776?s=400&v=4',
+                                width: 50.0,
+                                height: 50.0,
+                                color: Colors.black,
                               ),
                             ),
                           ),
