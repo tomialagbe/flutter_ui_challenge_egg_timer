@@ -17,10 +17,10 @@ class EggTimerDial extends StatelessWidget {
             print('Start drag coord: ${coord}');
           },
           onRadialDragUpdate: (coord) {
-
+            print('Dragging coord: $coord');
           },
           onRadialDragEnd: () {
-
+            print('Drag ended');
           },
           child: new Container(
             decoration: new BoxDecoration(

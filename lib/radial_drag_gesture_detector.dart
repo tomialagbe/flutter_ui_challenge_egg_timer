@@ -23,10 +23,24 @@ class RadialDragGestureDetector extends StatefulWidget {
 class _RadialDragGestureDetectorState extends State<RadialDragGestureDetector> {
 
   _onPanStart(DragStartDetails details) {
+    final polarCoord = _polarCoordFromGlobalOffset(details.globalPosition);
+    widget.onRadialDragStart(polarCoord);
+  }
+
+  _onPanUpdate(DragUpdateDetails details) {
+    final polarCoord = _polarCoordFromGlobalOffset(details.globalPosition);
+    widget.onRadialDragUpdate(polarCoord);
+  }
+
+  _onPanEnd(DragEndDetails details) {
+    widget.onRadialDragEnd();
+  }
+
+  _polarCoordFromGlobalOffset(globalOffset) {
     // Convert the user's global touch offset to an offset that is local to
     // this Widget.
     final localTouchOffset = (context.findRenderObject() as RenderBox)
-        .globalToLocal(details.globalPosition);
+        .globalToLocal(globalOffset);
 
     // Convert the local offset to a Point so that we can do math with it.
     final localTouchPoint = new Point(localTouchOffset.dx, localTouchOffset.dy);
@@ -34,25 +48,7 @@ class _RadialDragGestureDetectorState extends State<RadialDragGestureDetector> {
     // Create a Point at the center of this Widget to act as the origin.
     final originPoint = new Point(context.size.width / 2, context.size.height / 2);
 
-    // Subtract the origin from the touch point to get the vector from the origin
-    // to the touch point.
-    final vectorPoint = localTouchPoint - originPoint;
-    final vector = new Offset(vectorPoint.x, vectorPoint.y);
-
-    final polarCoord = new PolarCoord(
-      vector.direction,
-      vector.distance,
-    );
-
-    widget.onRadialDragStart(polarCoord);
-  }
-
-  _onPanUpdate(DragUpdateDetails details) {
-
-  }
-
-  _onPanEnd(DragEndDetails details) {
-
+    return new PolarCoord.fromPoints(originPoint, localTouchPoint);
   }
 
   @override
@@ -69,6 +65,18 @@ class _RadialDragGestureDetectorState extends State<RadialDragGestureDetector> {
 class PolarCoord {
   final double angle;
   final double radius;
+
+  factory PolarCoord.fromPoints(Point origin, Point point) {
+    // Subtract the origin from the point to get the vector from the origin
+    // to the point.
+    final vectorPoint = point - origin;
+    final vector = new Offset(vectorPoint.x, vectorPoint.y);
+
+    return new PolarCoord(
+      vector.direction,
+      vector.distance,
+    );
+  }
 
   PolarCoord(this.angle, this.radius);
 
