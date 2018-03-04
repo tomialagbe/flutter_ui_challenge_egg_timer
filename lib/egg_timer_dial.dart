@@ -42,7 +42,9 @@ class EggTimerDial extends StatelessWidget {
               ),
               new Padding(
                 padding: const EdgeInsets.all(50.0),
-                child: new Knob(),
+                child: new Knob(
+                  knobTurnPercent: 0.0,
+                ),
               ),
             ],
           ),
@@ -190,19 +192,35 @@ class TimeTickPainter extends CustomPainter {
 }
 
 class Knob extends StatelessWidget {
+
+  final double knobTurnPercent; // [0.0, 1.0]
+
+  Knob({
+    this.knobTurnPercent
+  });
+
   @override
   Widget build(BuildContext context) {
     return new Stack(
       children: [
-        new Container(
-          width: double.INFINITY,
-          height: double.INFINITY,
-          child: new CustomPaint(
-            painter: new ArrowPainter(),
+        // --------- Knob Arrow ---------
+        new Transform(
+          transform: new Matrix4.rotationZ(2 * PI * knobTurnPercent),
+          alignment: Alignment.center,
+          child: new Container(
+            width: double.INFINITY,
+            height: double.INFINITY,
+            child: new CustomPaint(
+              painter: new ArrowPainter(),
+            ),
           ),
         ),
+
+        // --------- Knob Circles --------
         new Padding(
           padding: const EdgeInsets.all(10.0),
+
+          //---------- Inner Circle With Fill -------
           child: new Container(
               decoration: new BoxDecoration(
                 shape: BoxShape.circle,
@@ -226,6 +244,8 @@ class Knob extends StatelessWidget {
                   ),
                 ],
               ),
+
+              //-------- Circle With Border -------
               child: new Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: new Container(
@@ -237,12 +257,18 @@ class Knob extends StatelessWidget {
                       width: 1.5,
                     ),
                   ),
+
+                  // -------- Center Icon --------
                   child: new Center(
-                    child: new Image.network(
-                      'https://avatars3.githubusercontent.com/u/14101776?s=400&v=4',
-                      width: 50.0,
-                      height: 50.0,
-                      color: Colors.black,
+                    child: new Transform(
+                      transform: new Matrix4.rotationZ(2 * PI * knobTurnPercent),
+                      alignment: Alignment.center,
+                      child: new Image.network(
+                        'https://avatars3.githubusercontent.com/u/14101776?s=400&v=4',
+                        width: 50.0,
+                        height: 50.0,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
                 ),
