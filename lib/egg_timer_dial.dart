@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:egg_timer/ui_constants.dart';
 import 'package:flutter/material.dart';
 
@@ -26,14 +28,76 @@ class EggTimerDial extends StatelessWidget {
               ),
             ],
           ),
-          child: new Padding(
-            padding: const EdgeInsets.all(50.0),
-            child: new Knob(),
+          child: new Stack(
+            children: [
+              new Padding(
+                padding: const EdgeInsets.all(55.0),
+                child: new Container(
+                  width: double.INFINITY,
+                  height: double.INFINITY,
+                  child: new CustomPaint(
+                    painter: new TimeTickPainter(),
+                  ),
+                ),
+              ),
+              new Padding(
+                padding: const EdgeInsets.all(50.0),
+                child: new Knob(),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+}
+
+class TimeTickPainter extends CustomPainter {
+
+  final LONG_TICK = 14.0;
+  final SHORT_TICK = 4.0;
+
+  final tickCount;
+  final ticksPerSection;
+  final ticksInset;
+  final tickPaint;
+
+  TimeTickPainter({
+    this.tickCount = 35,
+    this.ticksPerSection = 5,
+    this.ticksInset = 0.0,
+  }) : tickPaint = new Paint() {
+    tickPaint.color = Colors.black;
+    tickPaint.strokeWidth = 1.5;
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.translate(size.width / 2, size.height / 2);
+
+    canvas.save();
+
+    final radius = size.width / 2;
+    for (var i = 0; i < tickCount; ++i) {
+      final tickLength = i % ticksPerSection == 0 ? LONG_TICK : SHORT_TICK;
+
+      canvas.drawLine(
+        new Offset(0.0, -radius - tickLength),
+        new Offset(0.0, -radius),
+        tickPaint,
+      );
+
+      canvas.rotate(2 * PI / tickCount);
+    }
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return true;
+  }
+
 }
 
 class Knob extends StatelessWidget {
