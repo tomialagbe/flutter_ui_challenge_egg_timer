@@ -48,16 +48,23 @@ class MyApp extends StatelessWidget {
                   new Row(
                     children: [
                       new EggTimerButton(
-
+                        icon: Icons.refresh,
+                        text: 'RESTART',
+                        onPressed: () { },
                       ),
                       new Expanded(child: new Container()),
                       new EggTimerButton(
-
+                        icon: Icons.arrow_back,
+                        text: 'RESET',
+                        onPressed: () { },
                       ),
                     ],
                   ),
                   new EggTimerButton(
-
+                    icon: Icons.pause,
+                    text: 'PAUSE',
+                    backgroundColor: Colors.white,
+                    onPressed: () { },
                   ),
                 ],
               ),
