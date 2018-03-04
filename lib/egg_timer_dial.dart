@@ -102,71 +102,7 @@ class TimeTickPainter extends CustomPainter {
 
       // We need to paint the minute text at the beginning of every tick section.
       if (i % ticksPerSection == 0) {
-        canvas.save();
-        canvas.translate(0.0, -(size.width / 2) - 30.0);
-
-        // The spec shows text that is aligned differently based on where it
-        // falls on the circle. We find where the text is on the circle and handle
-        // each quadrant specifically.
-        final tickPercent = i / tickCount;
-        var quadrant;
-        if (tickPercent < 0.25) {
-          quadrant = 1;
-        } else if (tickPercent < 0.5) {
-          quadrant = 4;
-        } else if (tickPercent < 0.75) {
-          quadrant = 3;
-        } else {
-          quadrant = 2;
-        }
-
-        // Configure the painting of the minute text.
-        textPainter.text = new TextSpan(
-          text: '$i',
-          style: textStyle,
-        );
-
-        // Call layout so that we can measure how much room the text needs.
-        textPainter.layout();
-
-        // Orient the minute text based on the quadrant it belongs to.
-        switch (quadrant) {
-          case 1:
-            // Do nothing, pain the number facing its tick.
-            textPainter.paint(
-                canvas,
-                new Offset(
-                  -textPainter.width / 2,
-                  -textPainter.height / 2,
-                ),
-            );
-            break;
-          case 4:
-            // Rotate the canvas so that the number is drawn with the tick on its left side
-            canvas.rotate(-PI / 2);
-            textPainter.paint(
-              canvas,
-              new Offset(
-                -textPainter.width / 2,
-                -textPainter.height / 2,
-              ),
-            );
-            break;
-          case 2:
-          case 3:
-            // Rotate the canvas so that the number is drawn with the tick on its right side
-            canvas.rotate(PI / 2);
-            textPainter.paint(
-              canvas,
-              new Offset(
-                -textPainter.width / 2,
-                -textPainter.height / 2
-              ),
-            );
-            break;
-        }
-
-        canvas.restore();
+        _paintTimeLabel(canvas, size, i);
       }
 
       // Rotate the canvas so that the next tick can be drawn at the top center
@@ -175,6 +111,74 @@ class TimeTickPainter extends CustomPainter {
     }
 
     // Restore the original canvas orientation before the tick rotations.
+    canvas.restore();
+  }
+
+  _paintTimeLabel(canvas, size, tickIndex) {
+    canvas.save();
+    canvas.translate(0.0, -(size.width / 2) - 30.0);
+
+    // The spec shows text that is aligned differently based on where it
+    // falls on the circle. We find where the text is on the circle and handle
+    // each quadrant specifically.
+    final tickPercent = tickIndex / tickCount;
+    var quadrant;
+    if (tickPercent < 0.25) {
+      quadrant = 1;
+    } else if (tickPercent < 0.5) {
+      quadrant = 4;
+    } else if (tickPercent < 0.75) {
+      quadrant = 3;
+    } else {
+      quadrant = 2;
+    }
+
+    // Configure the painting of the minute text.
+    textPainter.text = new TextSpan(
+      text: '$tickIndex',
+      style: textStyle,
+    );
+
+    // Call layout so that we can measure how much room the text needs.
+    textPainter.layout();
+
+    // Orient the minute text based on the quadrant it belongs to.
+    switch (quadrant) {
+      case 1:
+      // Do nothing, pain the number facing its tick.
+        textPainter.paint(
+          canvas,
+          new Offset(
+            -textPainter.width / 2,
+            -textPainter.height / 2,
+          ),
+        );
+        break;
+      case 4:
+      // Rotate the canvas so that the number is drawn with the tick on its left side
+        canvas.rotate(-PI / 2);
+        textPainter.paint(
+          canvas,
+          new Offset(
+            -textPainter.width / 2,
+            -textPainter.height / 2,
+          ),
+        );
+        break;
+      case 2:
+      case 3:
+      // Rotate the canvas so that the number is drawn with the tick on its right side
+        canvas.rotate(PI / 2);
+        textPainter.paint(
+          canvas,
+          new Offset(
+              -textPainter.width / 2,
+              -textPainter.height / 2
+          ),
+        );
+        break;
+    }
+
     canvas.restore();
   }
 
