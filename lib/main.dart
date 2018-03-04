@@ -47,14 +47,12 @@ class MyApp extends StatelessWidget {
                 children: [
                   new Row(
                     children: [
-                      new RandomColorBlock(
-                        width: 200.0,
-                        height: 75.0,
+                      new EggTimerButton(
+
                       ),
                       new Expanded(child: new Container()),
-                      new RandomColorBlock(
-                        width: 200.0,
-                        height: 75.0,
+                      new EggTimerButton(
+
                       ),
                     ],
                   ),
