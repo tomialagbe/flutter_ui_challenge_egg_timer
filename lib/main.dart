@@ -1,3 +1,4 @@
+import 'package:egg_timer/egg_timer_button.dart';
 import 'package:egg_timer/egg_timer_time_display.dart';
 import 'package:egg_timer/framing.dart';
 import 'package:flutter/material.dart';
@@ -57,33 +58,8 @@ class MyApp extends StatelessWidget {
                       ),
                     ],
                   ),
-                  new FlatButton(
-                    splashColor: const Color(0x22000000),
-                    onPressed: () { },
-                    child: new Padding(
-                      padding: const EdgeInsets.all(25.0),
-                      child: new Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          new Padding(
-                            padding: const EdgeInsets.only(right: 3.0),
-                            child: new Icon(
-                              Icons.pause,
-                              color: Colors.black,
-                            ),
-                          ),
-                          new Text(
-                            'Pause',
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 20.0,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 3.0,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  new EggTimerButton(
+
                   ),
                 ],
               ),
