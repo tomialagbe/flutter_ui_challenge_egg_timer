@@ -54,7 +54,6 @@ class CountdownTimer {
 
     if ((state == CountdownTimerState.ready || state == CountdownTimerState.paused)
         && time > 0) {
-      print('Starting countdown timer with time: $time');
       state = CountdownTimerState.running;
       _stopwatch.start();
       _tick();
@@ -91,7 +90,7 @@ class CountdownTimer {
   _tick() {
     if (_timeInSeconds > 0) {
       _timeInSeconds = _startCountdownInSeconds - _stopwatch.elapsed.inSeconds;
-      print('Stopwatch: ${_stopwatch.elapsed.inSeconds}, time: $_timeInSeconds');
+//      print('Stopwatch: ${_stopwatch.elapsed.inSeconds}, time: $_timeInSeconds');
 
       // Notify our listener.
       onTimerUpdate();

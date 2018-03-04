@@ -71,7 +71,8 @@ class _DialGestureDetectorState extends State<DialGestureDetector> {
 
   _onRadialDragUpdate(ParametricCoord coord) {
     if (null != startTurningCoord) {
-      final angleDelta = coord.angle - startTurningCoord.angle;
+      var angleDelta = coord.angle - startTurningCoord.angle;
+      angleDelta = angleDelta > 0 ? angleDelta : angleDelta + (2 * PI);
       turningPositionAsPercent = dialPositionAsPercent + (angleDelta / (PI * 2));
 
       if (null != widget.onDialTurnUpdate) {
@@ -253,8 +254,6 @@ class DialPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-//    print('Size: $size');
-
     canvas.translate(size.width / 2, size.height / 2);
 
     final textPainter = new TextPainter(

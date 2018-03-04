@@ -43,7 +43,6 @@ class RadialGestureDetector extends StatefulWidget {
 class _RadialGestureDetectorState extends State<RadialGestureDetector> {
 
   _onDragStart(DragStartDetails details) {
-    print('Start drag position: ${details.globalPosition}');
     if (null != widget.onRadialDragStart) {
       widget.onRadialDragStart(
           _parametricCoordFromGlobalPosition(details.globalPosition)

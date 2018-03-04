@@ -8,7 +8,7 @@ class EggTimerDial extends StatefulWidget {
   final int maxTimeInSeconds;
   final CountdownTimerState timerState;
   final int timeInSeconds;
-  final Function onDialTurning;
+  final Function() onDialTurning;
   final Function(int) onDialTurnToTime;
   final Function(int) onDialReleasedAtTime;
 
@@ -32,6 +32,7 @@ class _EggTimerDialState extends State<EggTimerDial> with TickerProviderStateMix
 
   //-------- DIAL AND COUNTDOWN -------
   double dialPositionAsPercent = 0.0;
+  CountdownTimerState timerState = CountdownTimerState.ready;
   bool isDragging = false;
   int userSelectedTime = 0;
   AnimationController resetDialAnimationController;
@@ -40,6 +41,8 @@ class _EggTimerDialState extends State<EggTimerDial> with TickerProviderStateMix
   @override
   void initState() {
     super.initState();
+
+    timerState = widget.timerState;
 
     resetDialAnimationController = new AnimationController(duration: const Duration(milliseconds: 250), vsync: this)
       ..addListener(() {
@@ -53,33 +56,42 @@ class _EggTimerDialState extends State<EggTimerDial> with TickerProviderStateMix
     super.dispose();
   }
 
-  _onTimerUpdate() {
-    setState(() {
-      print('Tick Render Update. Time: ${widget.timeInSeconds}');
+  _updateDialDisplay() {
+    final oldDialPercent = dialPositionAsPercent;
+    dialPositionAsPercent = widget.timeInSeconds / widget.maxTimeInSeconds;
 
-      final newDialPercent = widget.timeInSeconds / widget.maxTimeInSeconds;
-      if (!isDragging) {
-        resetDialAnimationController.duration = new Duration(
-            milliseconds: (dialPositionAsPercent / RESET_SPEED_PERCENT_PER_SECOND * 1000).round()
-        );
-        resetDialAnimationController.value = 0.0;
-        resetDialAnimation = new Tween(begin: dialPositionAsPercent, end: newDialPercent)
-            .animate(resetDialAnimationController)
-          ..addListener(() {
+    final oldTimerState = timerState;
+    timerState = widget.timerState;
 
-          });
-        resetDialAnimationController.forward();
-      } else {
-        if (null != resetDialAnimation) {
-          resetDialAnimationController.stop();
+    // If the countdown timer was just reset then we want to animate the dial
+    // back to zero.
+    final timerJustReset = oldTimerState != CountdownTimerState.ready
+        && timerState == CountdownTimerState.ready;
+    if (timerJustReset) {
+      _resetDialWithAnimation(from: oldDialPercent);
+    }
+  }
+
+  _resetDialWithAnimation({from}) {
+    resetDialAnimation =
+    new Tween(begin: from, end: 0.0)
+        .animate(resetDialAnimationController)
+      ..addStatusListener((AnimationStatus status) {
+        if (status == AnimationStatus.completed) {
           resetDialAnimation = null;
         }
-      }
-      dialPositionAsPercent = newDialPercent;
-    });
+      });
+
+    resetDialAnimationController.duration = new Duration(
+        milliseconds: (from /
+            RESET_SPEED_PERCENT_PER_SECOND * 1000).round()
+    );
+    resetDialAnimationController.value = 0.0;
+    resetDialAnimationController.forward();
   }
 
   _onDialTurnStart(double newDialPositionAsPercent) {
+    // No dragging when timer is running or paused.
     if (widget.timerState != CountdownTimerState.ready) {
       return;
     }
@@ -87,30 +99,29 @@ class _EggTimerDialState extends State<EggTimerDial> with TickerProviderStateMix
     setState(() {
       isDragging = true;
       dialPositionAsPercent = newDialPositionAsPercent;
+
+      // Notify our listener that the user started turning the dial.
+      widget.onDialTurning();
     });
   }
 
   _onDialTurnUpdate(double newDialPositionAsPercent) {
+    // No dragging when timer is running or paused.
     if (widget.timerState != CountdownTimerState.ready) {
       return;
     }
 
     setState(() {
-      print('Updating turn to percent: $newDialPositionAsPercent');
       dialPositionAsPercent = newDialPositionAsPercent;
+      userSelectedTime = (widget.maxTimeInSeconds * dialPositionAsPercent).round();
 
-      // Round to the nearest minute before setting the countdown timer.
-      final selectedTime = (widget.maxTimeInSeconds * dialPositionAsPercent).round();
-//      final selectedTimeRoundedToMinutes = (widget.maxTimeInSeconds * dialPositionAsPercent / 60.0).round();
-//      final selectedTimeAsSeconds = (selectedTimeRoundedToMinutes * 60).round();
-      userSelectedTime = selectedTime;
-
+      // Notify our listener that the user has turned the dial.
       widget.onDialTurnToTime(userSelectedTime);
-//      countdownTimer.time = (selectedTimeRoundedToMinutes * 60).round();
     });
   }
 
   _onDialTurnEnd() {
+    // No dragging when timer is running or paused.
     if (widget.timerState != CountdownTimerState.ready) {
       return;
     }
@@ -118,18 +129,14 @@ class _EggTimerDialState extends State<EggTimerDial> with TickerProviderStateMix
     setState(() {
       isDragging = false;
 
+      // Notify our listener that the user has finished turning the dial.
       widget.onDialReleasedAtTime(userSelectedTime);
-//      // Round the time to the nearest minute (this is a design feature of the clock).
-//      countdownTimer.time = (countdownTimer.time / 60).round() * 60;
-//
-//      // Start the clock.
-//      countdownTimer.resume();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    _onTimerUpdate();
+    _updateDialDisplay();
 
     return new DraggableTimeDial(
       onDialTurnStart: _onDialTurnStart,
