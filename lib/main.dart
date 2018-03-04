@@ -1,3 +1,4 @@
+import 'package:egg_timer/egg_timer_time_display.dart';
 import 'package:egg_timer/framing.dart';
 import 'package:flutter/material.dart';
 
@@ -19,19 +20,8 @@ class MyApp extends StatelessWidget {
           child: new Column(
             children: [
               //--------- Time Display --------
-              new Padding(
-                padding: const EdgeInsets.only(top: 15.0),
-                child: new Text(
-                  '17:34',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontFamily: 'BebasNeue',
-                    fontSize: 150.0,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 10.0,
-                  ),
-                ),
+              new EggTimerTimeDisplay(
+
               ),
 
               //--------- Dial --------
