@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:egg_timer/knob_turn_gesture_detector.dart';
 import 'package:egg_timer/radial_drag_gesture_detector.dart';
 import 'package:egg_timer/ui_constants.dart';
 import 'package:flutter/material.dart';
@@ -12,15 +13,15 @@ class EggTimerDial extends StatelessWidget {
       padding: const EdgeInsets.only(left: 45.0, right: 45.0),
       child: new AspectRatio(
         aspectRatio: 1.0,
-        child: new RadialDragGestureDetector(
-          onRadialDragStart: (coord) {
-            print('Start drag coord: ${coord}');
+        child: new KnobTurnGestureDetector(
+          onKnobTurnStart: () {
+            print('Turn started.');
           },
-          onRadialDragUpdate: (coord) {
-            print('Dragging coord: $coord');
+          onKnobTurnUpdate: (knobTurnPercent) {
+            print('Turned $knobTurnPercent');
           },
-          onRadialDragEnd: () {
-            print('Drag ended');
+          onKnobTurnEnd: () {
+            print('Turning stopped.');
           },
           child: new Container(
             decoration: new BoxDecoration(
