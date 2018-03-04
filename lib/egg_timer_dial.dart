@@ -54,19 +54,30 @@ class EggTimerDial extends StatelessWidget {
 
 class TimeTickPainter extends CustomPainter {
 
-  final LONG_TICK = 14.0;
-  final SHORT_TICK = 4.0;
+  static const LONG_TICK = 14.0;
+  static const SHORT_TICK = 4.0;
 
   final tickCount;
   final ticksPerSection;
   final ticksInset;
   final tickPaint;
+  final textPainter;
+  final textStyle;
 
   TimeTickPainter({
     this.tickCount = 35,
     this.ticksPerSection = 5,
     this.ticksInset = 0.0,
-  }) : tickPaint = new Paint() {
+  }) : tickPaint = new Paint(),
+        textPainter = new TextPainter(
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.ltr,
+        ),
+        textStyle = const TextStyle(
+          color: Colors.black,
+          fontFamily: 'BebasNeue',
+          fontSize: 20.0,
+        ) {
     tickPaint.color = Colors.black;
     tickPaint.strokeWidth = 1.5;
   }
@@ -75,8 +86,10 @@ class TimeTickPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas.translate(size.width / 2, size.height / 2);
 
+    // Save canvas position so we can rotate while painting ticks.
     canvas.save();
 
+    // Paint a tick, then rotate the canvas, then paint another tick, etc.
     final radius = size.width / 2;
     for (var i = 0; i < tickCount; ++i) {
       final tickLength = i % ticksPerSection == 0 ? LONG_TICK : SHORT_TICK;
@@ -87,9 +100,81 @@ class TimeTickPainter extends CustomPainter {
         tickPaint,
       );
 
+      // We need to paint the minute text at the beginning of every tick section.
+      if (i % ticksPerSection == 0) {
+        canvas.save();
+        canvas.translate(0.0, -(size.width / 2) - 30.0);
+
+        // The spec shows text that is aligned differently based on where it
+        // falls on the circle. We find where the text is on the circle and handle
+        // each quadrant specifically.
+        final tickPercent = i / tickCount;
+        var quadrant;
+        if (tickPercent < 0.25) {
+          quadrant = 1;
+        } else if (tickPercent < 0.5) {
+          quadrant = 4;
+        } else if (tickPercent < 0.75) {
+          quadrant = 3;
+        } else {
+          quadrant = 2;
+        }
+
+        // Configure the painting of the minute text.
+        textPainter.text = new TextSpan(
+          text: '$i',
+          style: textStyle,
+        );
+
+        // Call layout so that we can measure how much room the text needs.
+        textPainter.layout();
+
+        // Orient the minute text based on the quadrant it belongs to.
+        switch (quadrant) {
+          case 1:
+            // Do nothing, pain the number facing its tick.
+            textPainter.paint(
+                canvas,
+                new Offset(
+                  -textPainter.width / 2,
+                  -textPainter.height / 2,
+                ),
+            );
+            break;
+          case 4:
+            // Rotate the canvas so that the number is drawn with the tick on its left side
+            canvas.rotate(-PI / 2);
+            textPainter.paint(
+              canvas,
+              new Offset(
+                -textPainter.width / 2,
+                -textPainter.height / 2,
+              ),
+            );
+            break;
+          case 2:
+          case 3:
+            // Rotate the canvas so that the number is drawn with the tick on its right side
+            canvas.rotate(PI / 2);
+            textPainter.paint(
+              canvas,
+              new Offset(
+                -textPainter.width / 2,
+                -textPainter.height / 2
+              ),
+            );
+            break;
+        }
+
+        canvas.restore();
+      }
+
+      // Rotate the canvas so that the next tick can be drawn at the top center
+      // of the dial.
       canvas.rotate(2 * PI / tickCount);
     }
 
+    // Restore the original canvas orientation before the tick rotations.
     canvas.restore();
   }
 
