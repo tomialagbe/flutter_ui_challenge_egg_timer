@@ -1,11 +1,17 @@
 import 'dart:math';
 
 import 'package:egg_timer/knob_turn_gesture_detector.dart';
-import 'package:egg_timer/radial_drag_gesture_detector.dart';
 import 'package:egg_timer/ui_constants.dart';
 import 'package:flutter/material.dart';
 
-class EggTimerDial extends StatelessWidget {
+class EggTimerDial extends StatefulWidget {
+  @override
+  _EggTimerDialState createState() => new _EggTimerDialState();
+}
+
+class _EggTimerDialState extends State<EggTimerDial> {
+
+  double knobPositionAsPercent = 0.0;
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +25,7 @@ class EggTimerDial extends StatelessWidget {
           },
           onKnobTurnUpdate: (knobTurnPercent) {
             print('Turned $knobTurnPercent');
+            setState(() => knobPositionAsPercent = knobTurnPercent);
           },
           onKnobTurnEnd: () {
             print('Turning stopped.');
@@ -55,7 +62,7 @@ class EggTimerDial extends StatelessWidget {
                 new Padding(
                   padding: const EdgeInsets.all(50.0),
                   child: new Knob(
-                    knobTurnPercent: 0.0,
+                    knobTurnPercent: knobPositionAsPercent,
                   ),
                 ),
               ],
