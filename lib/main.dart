@@ -42,9 +42,26 @@ class MyApp extends StatelessWidget {
               new Expanded(child: new Container()),
 
               //------- Controls -----
-              new RandomColorBlock(
-                width: double.INFINITY,
-                height: 150.0,
+              new Column(
+                children: [
+                  new Row(
+                    children: [
+                      new RandomColorBlock(
+                        width: 200.0,
+                        height: 75.0,
+                      ),
+                      new Expanded(child: new Container()),
+                      new RandomColorBlock(
+                        width: 200.0,
+                        height: 75.0,
+                      ),
+                    ],
+                  ),
+                  new RandomColorBlock(
+                    width: double.INFINITY,
+                    height: 75.0,
+                  ),
+                ],
               ),
             ],
           ),
