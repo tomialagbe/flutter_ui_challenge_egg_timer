@@ -1,7 +1,7 @@
 import 'package:egg_timer/egg_timer_button.dart';
 import 'package:flutter/material.dart';
 
-class EggTimerControls extends StatelessWidget {
+class EggTimerControls extends StatefulWidget {
 
   final displayMode;
   final onRestart;
@@ -18,42 +18,93 @@ class EggTimerControls extends StatelessWidget {
   });
 
   @override
+  _EggTimerControlsState createState() => new _EggTimerControlsState();
+}
+
+class _EggTimerControlsState extends State<EggTimerControls> with TickerProviderStateMixin {
+
+  AnimationController pauseResumeTransition;
+  AnimationController resetRestartTransition;
+
+
+  @override
+  void initState() {
+    super.initState();
+
+    pauseResumeTransition = new AnimationController(
+      duration: const Duration(milliseconds: 100),
+      vsync: this,
+    )
+    ..addListener(() => setState(() {}));
+
+    resetRestartTransition = new AnimationController(
+      duration: const Duration(milliseconds: 100),
+      vsync: this,
+    )
+    ..addListener(() => setState(() {}));
+  }
+
+
+  @override
+  void dispose() {
+    pauseResumeTransition.dispose();
+    resetRestartTransition.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+
+    switch (widget.displayMode) {
+      case ControlsDisplayMode.hidden:
+        pauseResumeTransition.reverse();
+        resetRestartTransition.reverse();
+        break;
+      case ControlsDisplayMode.pauseVisible:
+        pauseResumeTransition.forward();
+        resetRestartTransition.reverse();
+        break;
+      case ControlsDisplayMode.allVisible:
+        pauseResumeTransition.forward();
+        resetRestartTransition.forward();
+        break;
+    }
+
     return new Column(
       children: [
         new Opacity(
-          opacity: displayMode == ControlsDisplayMode.allVisible
-            ? 1.0
-            : 0.0,
+          opacity: resetRestartTransition.value,
           child: new Row(
             children: [
               new EggTimerButton(
                 icon: Icons.refresh,
                 text: 'RESTART',
-                onPressed: onRestart,
+                onPressed: widget.onRestart,
               ),
               new Expanded(child: new Container()),
               new EggTimerButton(
                 icon: Icons.arrow_back,
                 text: 'RESET',
-                onPressed: onReset,
+                onPressed: widget.onReset,
               ),
             ],
           ),
         ),
         new Transform(
-          transform: displayMode == ControlsDisplayMode.hidden
-            ? new Matrix4.translationValues(0.0, 100.0, 0.0)
-            : new Matrix4.identity(),
+          transform: new Matrix4.translationValues(
+              0.0,
+              100.0 * (1.0 - pauseResumeTransition.value),
+              0.0,
+          ),
           child: new EggTimerButton(
             icon: Icons.pause,
-            text: displayMode == ControlsDisplayMode.pauseVisible
+            text: widget.displayMode == ControlsDisplayMode.pauseVisible
                 ? 'PAUSE'
                 : 'RESUME',
             backgroundColor: Colors.white,
-            onPressed: displayMode == ControlsDisplayMode.pauseVisible
-                ? onPause
-                : onResume,
+            onPressed: widget.displayMode == ControlsDisplayMode.pauseVisible
+                ? widget.onPause
+                : widget.onResume,
           ),
         ),
       ],
