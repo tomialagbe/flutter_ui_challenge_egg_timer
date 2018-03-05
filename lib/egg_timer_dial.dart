@@ -24,11 +24,29 @@ class EggTimerDial extends StatefulWidget {
   _EggTimerDialState createState() => new _EggTimerDialState();
 }
 
-class _EggTimerDialState extends State<EggTimerDial> {
+class _EggTimerDialState extends State<EggTimerDial> with TickerProviderStateMixin {
 
+  static const RESET_SPEED_PERCENT_PER_SECOND = 4.0;
+
+  int lastTimerTime = 0;
   double knobPositionWhenTurnStarted = 0.0;
   double knobPositionTurningPercent = 0.0;
   bool isDragging = false;
+
+  AnimationController animateToZeroController;
+  Animation animateToZero;
+
+  @override
+  void initState() {
+    super.initState();
+    animateToZeroController = new AnimationController(vsync: this);
+  }
+
+  @override
+  void dispose() {
+    animateToZeroController.dispose();
+    super.dispose();
+  }
 
   get _knobPositionAsPercent {
     if (isDragging) {
@@ -42,8 +60,34 @@ class _EggTimerDialState extends State<EggTimerDial> {
     return (percent * widget.minuteCount).round() / widget.minuteCount;
   }
 
+  _animateToZero(fromTime) {
+    final startPercent = fromTime / (widget.minuteCount * 60);
+    final endPercent = 0.0;
+
+    animateToZero = new Tween(begin: startPercent, end: endPercent)
+        .animate(animateToZeroController)
+        ..addListener(() => setState(() {}))
+        ..addStatusListener((status) {
+          if (status == AnimationStatus.completed) {
+            animateToZero = null;
+            setState(() {});
+          }
+        });
+    animateToZeroController.duration = new Duration(
+      milliseconds: ((startPercent / RESET_SPEED_PERCENT_PER_SECOND) * 1000).round()
+    );
+    animateToZeroController.forward(from: 0.0);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (lastTimerTime != 0 && widget.timerTime == 0) {
+      // The timer may have been reset, animate to zero. Even if the timer wasn't
+      // reset and this is a normal countdown, this animation won't hurt,
+      _animateToZero(lastTimerTime);
+    }
+    lastTimerTime = widget.timerTime;
+
     return new Padding(
       padding: const EdgeInsets.only(left: 45.0, right: 45.0),
       child: new AspectRatio(
@@ -121,7 +165,9 @@ class _EggTimerDialState extends State<EggTimerDial> {
                 new Padding(
                   padding: const EdgeInsets.all(50.0),
                   child: new Knob(
-                    knobTurnPercent: _knobPositionAsPercent,
+                    knobTurnPercent: null == animateToZero
+                      ? _knobPositionAsPercent
+                      : animateToZero.value,
                   ),
                 ),
               ],
