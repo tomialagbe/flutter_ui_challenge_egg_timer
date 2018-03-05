@@ -47,7 +47,11 @@ class _EggTimerState extends State<EggTimer> {
           children: [
             //--------- Time Display --------
             new EggTimerTimeDisplay(
-
+              displayMode: timer.state == CountdownTimerState.ready
+                ? TimeDisplayMode.selection
+                : TimeDisplayMode.countdown,
+              selectionTime: timer.lastStartTimeInSeconds,
+              countdownTime: timer.time,
             ),
 
             //--------- Dial --------
@@ -55,6 +59,12 @@ class _EggTimerState extends State<EggTimer> {
               minuteCount: MAX_TIME.inMinutes,
               canSelectTime: timer.state == CountdownTimerState.ready,
               timerTime: timer.time,
+              onDialPositionTurned: (selectedDialPosition) {
+                setState(() {
+                  final selectedTime = (selectedDialPosition * MAX_TIME.inSeconds).round();
+                  timer.selectTime(selectedTime);
+                });
+              },
               onDialPositionSelected: (selectedDialPosition) {
                 setState(() {
                   final selectedTime = (selectedDialPosition * MAX_TIME.inSeconds).round();

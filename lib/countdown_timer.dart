@@ -13,7 +13,7 @@ class CountdownTimer {
   final stopwatch = new Stopwatch(); // Stopwatch counts time up, we count time down.
   CountdownTimerState state = CountdownTimerState.ready;
   int _timeInSeconds = 0;
-  int _lastStartTimeInSeconds = 0;
+  int lastStartTimeInSeconds = 0;
 
   CountdownTimer({
     this.onTimerUpdate,
@@ -50,7 +50,7 @@ class CountdownTimer {
   // and starts it running.
   restart() {
     if (state == CountdownTimerState.paused) {
-      _timeInSeconds = _lastStartTimeInSeconds;
+      _timeInSeconds = lastStartTimeInSeconds;
       stopwatch.reset();
       resume();
     }
@@ -61,7 +61,7 @@ class CountdownTimer {
   reset() {
     if (state == CountdownTimerState.paused) {
       _timeInSeconds = 0;
-      _lastStartTimeInSeconds = 0;
+      lastStartTimeInSeconds = 0;
       state = CountdownTimerState.ready;
       stopwatch.reset();
 
@@ -75,7 +75,7 @@ class CountdownTimer {
   selectTime(timeInSeconds) {
     if (state == CountdownTimerState.ready) {
       _timeInSeconds = timeInSeconds;
-      _lastStartTimeInSeconds = timeInSeconds;
+      lastStartTimeInSeconds = timeInSeconds;
 
       if (null != onTimerUpdate) {
         onTimerUpdate(time);
@@ -85,7 +85,7 @@ class CountdownTimer {
 
   _tick() {
     if (state == CountdownTimerState.running) {
-      _timeInSeconds = (_lastStartTimeInSeconds - stopwatch.elapsed.inSeconds).clamp(0, double.INFINITY);
+      _timeInSeconds = (lastStartTimeInSeconds - stopwatch.elapsed.inSeconds).clamp(0, double.INFINITY);
 
       if (null != onTimerUpdate) {
         onTimerUpdate(_timeInSeconds);

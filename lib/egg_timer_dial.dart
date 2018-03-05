@@ -9,12 +9,14 @@ class EggTimerDial extends StatefulWidget {
   final minuteCount;
   final canSelectTime;
   final timerTime;
+  final onDialPositionTurned;
   final onDialPositionSelected;
 
   EggTimerDial({
     this.minuteCount = 35,
     this.canSelectTime = false,
     this.timerTime = 0,
+    this.onDialPositionTurned,
     this.onDialPositionSelected,
   });
 
@@ -47,11 +49,17 @@ class _EggTimerDialState extends State<EggTimerDial> {
             if (widget.canSelectTime) {
               print('Turn started.');
               isDragging = true;
+              knobPositionWhenTurnStarted = widget.timerTime / widget.minuteCount;
             }
           },
           onKnobTurnUpdate: (knobTurnPercent) {
             if (isDragging) {
               print('Turned $knobTurnPercent');
+
+              if (null != widget.onDialPositionTurned) {
+                widget.onDialPositionTurned(knobTurnPercent);
+              }
+
               setState(() => knobPositionTurningPercent = knobTurnPercent);
             }
           },
