@@ -11,6 +11,8 @@ dependencies:
 
   intl: "^0.15.2"
 
+  fluttery:
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

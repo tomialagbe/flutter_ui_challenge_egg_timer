@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:egg_timer/radial_drag_gesture_detector.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttery/gestures.dart';
 
 class KnobTurnGestureDetector extends StatefulWidget {
 
