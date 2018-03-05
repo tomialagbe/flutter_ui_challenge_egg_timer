@@ -11,20 +11,24 @@ class CountdownTimer {
   final CountdownTimerUpdate onTimerUpdate;
   final CountdownTimerAlarm onTimerAlarm;
   final stopwatch = new Stopwatch(); // Stopwatch counts time up, we count time down.
-  CountdownTimeState state = CountdownTimeState.ready;
-  int _timeInSeconds;
-  int _lastStartTimeInSeconds;
+  CountdownTimerState state = CountdownTimerState.ready;
+  int _timeInSeconds = 0;
+  int _lastStartTimeInSeconds = 0;
 
   CountdownTimer({
     this.onTimerUpdate,
     this.onTimerAlarm,
   });
 
+  get time {
+    return _timeInSeconds;
+  }
+
   // Starts the countdown if the timer is READY or PAUSED.
   resume() {
-    if (state != CountdownTimeState.running && _timeInSeconds > 0) {
+    if (state != CountdownTimerState.running && _timeInSeconds > 0) {
       print('Resuming from $_timeInSeconds seconds');
-      state = CountdownTimeState.running;
+      state = CountdownTimerState.running;
       stopwatch.start();
       _tick();
     }
@@ -32,8 +36,8 @@ class CountdownTimer {
 
   // Pauses the countdown if the timer is RUNNING.
   pause() {
-    if (state == CountdownTimeState.running) {
-      state = CountdownTimeState.paused;
+    if (state == CountdownTimerState.running) {
+      state = CountdownTimerState.paused;
       stopwatch.stop();
     }
   }
@@ -41,7 +45,7 @@ class CountdownTimer {
   // If the timer is PAUSED, returns the timer to its original countdown position
   // and starts it running.
   restart() {
-    if (state == CountdownTimeState.paused) {
+    if (state == CountdownTimerState.paused) {
       _timeInSeconds = _lastStartTimeInSeconds;
       stopwatch.reset();
       resume();
@@ -51,24 +55,24 @@ class CountdownTimer {
   // If the timer is PAUSED, returns the timer to the zero position and puts it
   // in the READY state.
   reset() {
-    if (state == CountdownTimeState.paused) {
+    if (state == CountdownTimerState.paused) {
       _timeInSeconds = 0;
       _lastStartTimeInSeconds = 0;
-      state = CountdownTimeState.ready;
+      state = CountdownTimerState.ready;
       stopwatch.reset();
     }
   }
 
   // If the timer is READY, sets the time to the desired time.
   selectTime(timeInSeconds) {
-    if (state == CountdownTimeState.ready) {
+    if (state == CountdownTimerState.ready) {
       _timeInSeconds = timeInSeconds;
       _lastStartTimeInSeconds = timeInSeconds;
     }
   }
 
   _tick() {
-    if (state == CountdownTimeState.running) {
+    if (state == CountdownTimerState.running) {
       _timeInSeconds = (_lastStartTimeInSeconds - stopwatch.elapsed.inSeconds).clamp(0, double.INFINITY);
 
       if (null != onTimerUpdate) {
@@ -84,7 +88,7 @@ class CountdownTimer {
   }
 }
 
-enum CountdownTimeState {
+enum CountdownTimerState {
   ready,
   running,
   paused,

@@ -1,3 +1,4 @@
+import 'package:egg_timer/countdown_timer.dart';
 import 'package:egg_timer/egg_timer_controls.dart';
 import 'package:egg_timer/egg_timer_dial.dart';
 import 'package:egg_timer/egg_timer_time_display.dart';
@@ -10,6 +11,27 @@ class EggTimer extends StatefulWidget {
 }
 
 class _EggTimerState extends State<EggTimer> {
+
+  static const MAX_TIME = const Duration(minutes: 15);
+
+  CountdownTimer timer;
+
+  @override
+  void initState() {
+    timer = new CountdownTimer(
+      onTimerUpdate: _onTimerUpdate,
+      onTimerAlarm: _onAlarm,
+    );
+  }
+
+  _onTimerUpdate(newTime) {
+    setState(() {});
+  }
+
+  _onAlarm() {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return new Container(
@@ -30,7 +52,16 @@ class _EggTimerState extends State<EggTimer> {
 
             //--------- Dial --------
             new EggTimerDial(
-
+              minuteCount: MAX_TIME.inMinutes,
+              canSelectTime: timer.state == CountdownTimerState.ready,
+              timerTime: timer.time,
+              onDialPositionSelected: (selectedDialPosition) {
+                setState(() {
+                  final selectedTime = (selectedDialPosition * MAX_TIME.inSeconds).round();
+                  timer.selectTime(selectedTime);
+                  timer.resume();
+                });
+              },
             ),
 
             //------- Expanded Area For Extra Space -------

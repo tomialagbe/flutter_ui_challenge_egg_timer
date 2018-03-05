@@ -5,14 +5,36 @@ import 'package:egg_timer/ui_constants.dart';
 import 'package:flutter/material.dart';
 
 class EggTimerDial extends StatefulWidget {
+
+  final minuteCount;
+  final canSelectTime;
+  final timerTime;
+  final onDialPositionSelected;
+
+  EggTimerDial({
+    this.minuteCount = 35,
+    this.canSelectTime = false,
+    this.timerTime = 0,
+    this.onDialPositionSelected,
+  });
+
   @override
   _EggTimerDialState createState() => new _EggTimerDialState();
 }
 
 class _EggTimerDialState extends State<EggTimerDial> {
 
-  double knobPositionAsPercent = 0.0;
+  double knobPositionWhenTurnStarted = 0.0;
   double knobPositionTurningPercent = 0.0;
+  bool isDragging = false;
+
+  get _knobPositionAsPercent {
+    if (isDragging) {
+      return knobPositionWhenTurnStarted + knobPositionTurningPercent;
+    } else {
+      return widget.timerTime / (widget.minuteCount * 60);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,18 +44,32 @@ class _EggTimerDialState extends State<EggTimerDial> {
         aspectRatio: 1.0,
         child: new KnobTurnGestureDetector(
           onKnobTurnStart: () {
-            print('Turn started.');
+            if (widget.canSelectTime) {
+              print('Turn started.');
+              isDragging = true;
+            }
           },
           onKnobTurnUpdate: (knobTurnPercent) {
-            print('Turned $knobTurnPercent');
-            setState(() => knobPositionTurningPercent = knobTurnPercent);
+            if (isDragging) {
+              print('Turned $knobTurnPercent');
+              setState(() => knobPositionTurningPercent = knobTurnPercent);
+            }
           },
           onKnobTurnEnd: () {
-            print('Turning stopped.');
-            setState(() {
-              knobPositionAsPercent = knobPositionAsPercent + knobPositionTurningPercent;
-              knobPositionTurningPercent = 0.0;
-            });
+            if (isDragging) {
+              print('Turning stopped.');
+              setState(() {
+                isDragging = false;
+
+                knobPositionWhenTurnStarted =
+                    knobPositionWhenTurnStarted + knobPositionTurningPercent;
+                knobPositionTurningPercent = 0.0;
+
+                if (null != widget.onDialPositionSelected) {
+                  widget.onDialPositionSelected(knobPositionWhenTurnStarted);
+                }
+              });
+            }
           },
           child: new Container(
             decoration: new BoxDecoration(
@@ -60,14 +96,16 @@ class _EggTimerDialState extends State<EggTimerDial> {
                     width: double.INFINITY,
                     height: double.INFINITY,
                     child: new CustomPaint(
-                      painter: new TimeTickPainter(),
+                      painter: new TimeTickPainter(
+                        tickCount: widget.minuteCount,
+                      ),
                     ),
                   ),
                 ),
                 new Padding(
                   padding: const EdgeInsets.all(50.0),
                   child: new Knob(
-                    knobTurnPercent: knobPositionAsPercent + knobPositionTurningPercent,
+                    knobTurnPercent: _knobPositionAsPercent,
                   ),
                 ),
               ],
@@ -92,7 +130,7 @@ class TimeTickPainter extends CustomPainter {
   final textStyle;
 
   TimeTickPainter({
-    this.tickCount = 35,
+    this.tickCount,
     this.ticksPerSection = 5,
     this.ticksInset = 0.0,
   }) : tickPaint = new Paint(),
