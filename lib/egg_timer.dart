@@ -69,7 +69,28 @@ class _EggTimerState extends State<EggTimer> {
 
             //------- Controls -----
             new EggTimerControls(
-
+              displayMode: () {
+                switch (timer.state) {
+                  case CountdownTimerState.ready:
+                    return ControlsDisplayMode.hidden;
+                  case CountdownTimerState.running:
+                    return ControlsDisplayMode.pauseVisible;
+                  case CountdownTimerState.paused:
+                    return ControlsDisplayMode.allVisible;
+                }
+              }(),
+              onPause: () {
+                timer.pause();
+              },
+              onResume: () {
+                timer.resume();
+              },
+              onRestart: () {
+                timer.restart();
+              },
+              onReset: () {
+                timer.reset();
+              }
             ),
           ],
         ),

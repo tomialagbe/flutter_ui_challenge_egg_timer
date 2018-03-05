@@ -39,6 +39,10 @@ class CountdownTimer {
     if (state == CountdownTimerState.running) {
       state = CountdownTimerState.paused;
       stopwatch.stop();
+
+      if (null != onTimerUpdate) {
+        onTimerUpdate(time);
+      }
     }
   }
 
@@ -60,6 +64,10 @@ class CountdownTimer {
       _lastStartTimeInSeconds = 0;
       state = CountdownTimerState.ready;
       stopwatch.reset();
+
+      if (null != onTimerUpdate) {
+        onTimerUpdate(time);
+      }
     }
   }
 
@@ -68,6 +76,10 @@ class CountdownTimer {
     if (state == CountdownTimerState.ready) {
       _timeInSeconds = timeInSeconds;
       _lastStartTimeInSeconds = timeInSeconds;
+
+      if (null != onTimerUpdate) {
+        onTimerUpdate(time);
+      }
     }
   }
 
