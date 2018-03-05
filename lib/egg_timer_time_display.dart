@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class EggTimerTimeDisplay extends StatelessWidget {
-
-  final DateFormat selectionTimeFormat = new DateFormat('mm');
-  final DateFormat countdownTimeFormat = new DateFormat('mm:ss');
+class EggTimerTimeDisplay extends StatefulWidget {
 
   final displayMode;
   final selectionTime;
@@ -16,27 +13,59 @@ class EggTimerTimeDisplay extends StatelessWidget {
     this.countdownTime = 0,
   });
 
+  @override
+  _EggTimerTimeDisplayState createState() => new _EggTimerTimeDisplayState();
+}
+
+class _EggTimerTimeDisplayState extends State<EggTimerTimeDisplay> with TickerProviderStateMixin {
+
+  final DateFormat selectionTimeFormat = new DateFormat('mm');
+  final DateFormat countdownTimeFormat = new DateFormat('mm:ss');
+
+  AnimationController transitionToCountdown;
+
+  @override
+  void initState() {
+    super.initState();
+    transitionToCountdown = new AnimationController(
+      duration: const Duration(milliseconds: 100),
+      vsync: this,
+    )
+    ..addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    transitionToCountdown.dispose();
+    super.dispose();
+  }
+
   get formattedSelectionTime {
-    DateTime dateTime = new DateTime(new DateTime.now().year, 0, 0, 0, 0, selectionTime);
+    DateTime dateTime = new DateTime(new DateTime.now().year, 0, 0, 0, 0, widget.selectionTime);
     return selectionTimeFormat.format(dateTime);
   }
 
   get formattedCountdownTime {
-    DateTime dateTime = new DateTime(new DateTime.now().year, 0, 0, 0, 0, countdownTime);
+    DateTime dateTime = new DateTime(new DateTime.now().year, 0, 0, 0, 0, widget.countdownTime);
     return countdownTimeFormat.format(dateTime);
   }
 
   @override
   Widget build(BuildContext context) {
+
+    if (widget.displayMode == TimeDisplayMode.selection) {
+      transitionToCountdown.reverse();
+    } else {
+      transitionToCountdown.forward();
+    }
+
     return new Padding(
       padding: const EdgeInsets.only(top: 15.0),
       child: new Stack(
         alignment: Alignment.center,
         children: [
           new Opacity(
-            opacity: displayMode == TimeDisplayMode.selection
-              ? 1.0
-              : 0.0,
+            opacity: 1.0 - transitionToCountdown.value,
             child: new Text(
               '$formattedSelectionTime',
               textAlign: TextAlign.center,
@@ -50,9 +79,11 @@ class EggTimerTimeDisplay extends StatelessWidget {
             ),
           ),
           new Transform(
-            transform: displayMode == TimeDisplayMode.countdown
-              ? new Matrix4.identity()
-              : new Matrix4.translationValues(0.0, -175.0, 0.0),
+            transform: new Matrix4.translationValues(
+                0.0,
+                -175.0 * (1.0 - transitionToCountdown.value),
+                0.0
+            ),
             child: new Text(
               '$formattedCountdownTime',
               textAlign: TextAlign.center,
