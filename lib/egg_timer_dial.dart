@@ -38,6 +38,10 @@ class _EggTimerDialState extends State<EggTimerDial> {
     }
   }
 
+  _percentRoundedToNearestMinute(percent) {
+    return (percent * widget.minuteCount).round() / widget.minuteCount;
+  }
+
   @override
   Widget build(BuildContext context) {
     return new Padding(
@@ -57,7 +61,9 @@ class _EggTimerDialState extends State<EggTimerDial> {
               print('Turned $knobTurnPercent');
 
               if (null != widget.onDialPositionTurned) {
-                widget.onDialPositionTurned(knobTurnPercent);
+                widget.onDialPositionTurned(
+                  _percentRoundedToNearestMinute(knobTurnPercent),
+                );
               }
 
               setState(() => knobPositionTurningPercent = knobTurnPercent);
@@ -74,7 +80,9 @@ class _EggTimerDialState extends State<EggTimerDial> {
                 knobPositionTurningPercent = 0.0;
 
                 if (null != widget.onDialPositionSelected) {
-                  widget.onDialPositionSelected(knobPositionWhenTurnStarted);
+                  widget.onDialPositionSelected(
+                    _percentRoundedToNearestMinute(knobPositionWhenTurnStarted),
+                  );
                 }
               });
             }
