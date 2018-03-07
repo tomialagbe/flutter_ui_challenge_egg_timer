@@ -21,12 +21,12 @@ class EggTimer {
   set currentTime(newTime) {
     if (state == EggTimerState.ready) {
       _currentTime = newTime;
+      lastStartTime = currentTime;
     }
   }
 
   resume() {
     state = EggTimerState.running;
-    lastStartTime = currentTime;
     stopwatch.start();
 
     _tick();
