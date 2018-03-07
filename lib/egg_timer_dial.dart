@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:egg_timer/egg_timer.dart';
 import 'package:egg_timer/egg_timer_knob.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttery/gestures.dart';
@@ -9,6 +10,7 @@ final Color GRADIENT_BOTTOM = const Color(0xFFE8E8E8);
 
 class EggTimerDial extends StatefulWidget {
 
+  final EggTimerState eggTimerState;
   final Duration currentTime;
   final Duration maxTime;
   final int ticksPerSection;
@@ -16,6 +18,7 @@ class EggTimerDial extends StatefulWidget {
   final Function(Duration) onDialStopTurning;
 
   EggTimerDial({
+    this.eggTimerState,
     this.currentTime = const Duration(minutes: 0),
     this.maxTime = const Duration(minutes: 35),
     this.ticksPerSection = 5,
@@ -27,7 +30,27 @@ class EggTimerDial extends StatefulWidget {
   _EggTimerDialState createState() => new _EggTimerDialState();
 }
 
-class _EggTimerDialState extends State<EggTimerDial> {
+class _EggTimerDialState extends State<EggTimerDial> with TickerProviderStateMixin {
+
+  static const RESET_SPEED_PERCENT_PER_SECOND = 4.0;
+
+  EggTimerState prevEggTimerState;
+  double prevRotationPercent = 0.0;
+  AnimationController resetToZeroController;
+  Animation resettingAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    resetToZeroController = new AnimationController(vsync: this);
+  }
+
+  @override
+  void dispose() {
+    resetToZeroController.dispose();
+    super.dispose();
+  }
 
   _rotationPercent() {
     return widget.currentTime.inSeconds / widget.maxTime.inSeconds;
@@ -35,6 +58,25 @@ class _EggTimerDialState extends State<EggTimerDial> {
 
   @override
   Widget build(BuildContext context) {
+
+    if (widget.currentTime.inSeconds == 0 && prevEggTimerState != EggTimerState.ready) {
+      resettingAnimation = new Tween(begin: prevRotationPercent, end: 0.0)
+          .animate(resetToZeroController)
+          ..addListener(() => setState(() {}))
+          ..addStatusListener((status) {
+            if (status == AnimationStatus.completed) {
+              setState(() => resettingAnimation = null);
+            }
+          });
+      resetToZeroController.duration = new Duration(
+        milliseconds: ((prevRotationPercent / RESET_SPEED_PERCENT_PER_SECOND) * 1000).round()
+      );
+      resetToZeroController.forward(from: 0.0);
+    }
+
+    prevEggTimerState = widget.eggTimerState;
+    prevRotationPercent = _rotationPercent();
+
     return new DialTurnGestureDetector(
       currentTime: widget.currentTime,
       maxTime: widget.maxTime,
@@ -80,7 +122,9 @@ class _EggTimerDialState extends State<EggTimerDial> {
                   new Padding(
                     padding: const EdgeInsets.all(65.0),
                     child: new EggTimerDialKnob(
-                      rotationPercent: _rotationPercent(),
+                      rotationPercent: resettingAnimation == null
+                        ? _rotationPercent()
+                        : resettingAnimation.value,
                     ),
                   ),
                 ],
@@ -126,7 +170,8 @@ class _DialTurnGestureDetectorState extends State<DialTurnGestureDetector> {
 
   _onRadialDragUpdate(PolarCoord coord) {
     if (startDragCoord != null) {
-      final angleDiff = coord.angle - startDragCoord.angle;
+      var angleDiff = coord.angle - startDragCoord.angle;
+      angleDiff = angleDiff >= 0.0 ? angleDiff : angleDiff + (2 * PI);
       final anglePercent = angleDiff / (2 * PI);
       final timeDiffInSeconds = (anglePercent * widget.maxTime.inSeconds).round();
       selectedTime = new Duration(seconds: startDragTime.inSeconds + timeDiffInSeconds);
