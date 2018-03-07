@@ -72,12 +72,23 @@ class TickPainter extends CustomPainter {
   final ticksPerSection;
   final ticksInset;
   final tickPaint;
+  final textPainter;
+  final textStyle;
 
   TickPainter({
     this.tickCount = 35,
     this.ticksPerSection = 5,
     this.ticksInset = 0.0,
-  }) : tickPaint = new Paint() {
+  }) : tickPaint = new Paint(),
+      textPainter = new TextPainter(
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
+      ),
+      textStyle = const TextStyle(
+        color: Colors.black,
+        fontFamily: 'BebasNeue',
+        fontSize: 20.0,
+      ) {
     tickPaint.color = Colors.black;
     tickPaint.strokeWidth = 1.5;
   }
@@ -97,6 +108,53 @@ class TickPainter extends CustomPainter {
         new Offset(0.0, -radius - tickLength),
         tickPaint,
       );
+
+      if (i % ticksPerSection == 0) {
+        // Paint text.
+        canvas.save();
+        canvas.translate(0.0, -(size.width / 2) - 30.0);
+
+        textPainter.text = new TextSpan(
+          text: '$i',
+          style: textStyle,
+        );
+
+        // Layout the text
+        textPainter.layout();
+
+        // Figure out which quadrant the text is in.
+        final tickPercent = i / tickCount;
+        var quadrant;
+        if (tickPercent < 0.25) {
+          quadrant = 1;
+        } else if (tickPercent < 0.5) {
+          quadrant = 4;
+        } else if (tickPercent < 0.75) {
+          quadrant = 3;
+        } else {
+          quadrant = 2;
+        }
+
+        switch (quadrant) {
+          case 4:
+            canvas.rotate(-PI / 2);
+            break;
+          case 2:
+          case 3:
+            canvas.rotate(PI / 2);
+            break;
+        }
+
+        textPainter.paint(
+          canvas,
+          new Offset(
+            -textPainter.width / 2,
+            -textPainter.height / 2,
+          ),
+        );
+
+        canvas.restore();
+      }
 
       canvas.rotate(2 * PI / tickCount);
     }
