@@ -82,7 +82,19 @@ class _MyAppState extends State<MyApp> {
                 new Expanded(child: new Container()),
 
                 new EggTimerControls(
-
+                  eggTimerState: eggTimer.state,
+                  onPause: () {
+                    setState(() => eggTimer.pause());
+                  },
+                  onResume: () {
+                    setState(() => eggTimer.resume());
+                  },
+                  onRestart: () {
+                    setState(() => eggTimer.restart());
+                  },
+                  onReset: () {
+                    setState(() => eggTimer.reset());
+                  },
                 ),
               ],
             ),

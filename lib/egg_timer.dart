@@ -26,14 +26,47 @@ class EggTimer {
   }
 
   resume() {
-    state = EggTimerState.running;
-    stopwatch.start();
+    if (state != EggTimerState.running) {
+      state = EggTimerState.running;
+      stopwatch.start();
 
-    _tick();
+      _tick();
+    }
   }
 
   pause() {
+    if (state == EggTimerState.running) {
+      state = EggTimerState.paused;
+      stopwatch.stop();
 
+      if (null != onTimerUpdate) {
+        onTimerUpdate();
+      }
+    }
+  }
+
+  restart() {
+    if (state == EggTimerState.paused) {
+      state = EggTimerState.running;
+      _currentTime = lastStartTime;
+      stopwatch.reset();
+      stopwatch.start();
+
+      _tick();
+    }
+  }
+
+  reset() {
+    if (state == EggTimerState.paused) {
+      state = EggTimerState.ready;
+      _currentTime = const Duration(seconds: 0);
+      lastStartTime = _currentTime;
+      stopwatch.reset();
+
+      if (null != onTimerUpdate) {
+        onTimerUpdate();
+      }
+    }
   }
 
   _tick() {
