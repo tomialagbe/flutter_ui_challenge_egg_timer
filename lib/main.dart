@@ -1,3 +1,5 @@
+import 'package:egg_timer/egg_timer_button.dart';
+import 'package:egg_timer/egg_timer_controls.dart';
 import 'package:egg_timer/egg_timer_time_display.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttery/framing.dart';
@@ -25,7 +27,7 @@ class MyApp extends StatelessWidget {
               new RandomColorBlock(
                 width: double.INFINITY,
                 child: new Padding(
-                  padding: const EdgeInsets.only(left: 30.0, right: 30.0),
+                  padding: const EdgeInsets.only(left: 45.0, right: 45.0),
                   child: new AspectRatio(
                     aspectRatio: 1.0,
                     child: new RandomColorBlock(
@@ -35,13 +37,8 @@ class MyApp extends StatelessWidget {
                 ),
               ),
               new Expanded(child: new Container()),
-              new RandomColorBlock(
-                width: double.INFINITY,
-                height: 50.0,
-              ),
-              new RandomColorBlock(
-                width: double.INFINITY,
-                height: 50.0,
+              new EggTimerControls(
+
               ),
             ],
           ),
