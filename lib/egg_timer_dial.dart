@@ -7,11 +7,27 @@ final Color GRADIENT_TOP = const Color(0xFFF5F5F5);
 final Color GRADIENT_BOTTOM = const Color(0xFFE8E8E8);
 
 class EggTimerDial extends StatefulWidget {
+
+  final Duration currentTime;
+  final Duration maxTime;
+  final int ticksPerSection;
+
+  EggTimerDial({
+    this.currentTime = const Duration(minutes: 0),
+    this.maxTime = const Duration(minutes: 35),
+    this.ticksPerSection = 5,
+  });
+
   @override
   _EggTimerDialState createState() => new _EggTimerDialState();
 }
 
 class _EggTimerDialState extends State<EggTimerDial> {
+
+  _rotationPercent() {
+    return widget.currentTime.inSeconds / widget.maxTime.inSeconds;
+  }
+
   @override
   Widget build(BuildContext context) {
     return new Container(
@@ -45,14 +61,17 @@ class _EggTimerDialState extends State<EggTimerDial> {
                   padding: const EdgeInsets.all(55.0),
                   child: new CustomPaint(
                     painter: new TickPainter(
-
+                      tickCount: widget.maxTime.inMinutes,
+                      ticksPerSection: widget.ticksPerSection,
                     ),
                   ),
                 ),
 
                 new Padding(
                   padding: const EdgeInsets.all(65.0),
-                  child: new EggTimerDialKnob(),
+                  child: new EggTimerDialKnob(
+                    rotationPercent: _rotationPercent(),
+                  ),
                 ),
               ],
             ),

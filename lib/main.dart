@@ -1,3 +1,4 @@
+import 'package:egg_timer/egg_timer.dart';
 import 'package:egg_timer/egg_timer_button.dart';
 import 'package:egg_timer/egg_timer_controls.dart';
 import 'package:egg_timer/egg_timer_dial.dart';
@@ -12,8 +13,20 @@ void main() {
   runApp(new MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => new _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+
+  final EggTimer eggTimer;
+
+  _MyAppState()
+      : eggTimer = new EggTimer(
+          maxTime: const Duration(minutes: 35)
+        );
+
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
@@ -38,7 +51,9 @@ class MyApp extends StatelessWidget {
                 ),
 
                 new EggTimerDial(
-
+                  currentTime: eggTimer.currentTime,
+                  maxTime: eggTimer.maxTime,
+                  ticksPerSection: 5,
                 ),
 
                 new Expanded(child: new Container()),
